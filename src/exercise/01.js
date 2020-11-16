@@ -2,36 +2,23 @@
 // http://localhost:3000/isolated/exercise/01.js
 
 import * as React from 'react'
-// 🐨 you'll also need to get the fetchPokemon function from ../pokemon:
-import {PokemonDataView} from '../pokemon'
+import {PokemonDataView, fetchPokemon} from '../pokemon'
 
-// 💰 use it like this: fetchPokemon(pokemonName).then(handleSuccess, handleFailure)
+// In this exercise, we have a page that's specifically for the pokemon named
+// Pikachu and we want to load Pikachu's data as soon as the app starts. You're
+// going to use an `ErrorBoundary` that I've built for you (as relevant as they are
+// to this topic, the concept of `Error Boundaries` long pre-dates Suspense, so we
+// won't be getting into it for this workshop). You'll also be using the
+// `React.Suspense` API.
 
-// 🐨 create a variable called "pokemon" (using let)
-
-// 💣 delete this now...
-const pokemon = {
-  name: 'TODO',
-  number: 'TODO',
-  attacks: {
-    special: [{name: 'TODO', type: 'TODO', damage: 'TODO'}],
-  },
-  fetchedAt: 'TODO',
-}
-
-// We don't need the app to be mounted to know that we want to fetch the pokemon
-// named "pikachu" so we can go ahead and do that right here.
-// 🐨 assign the pokemonPromise variable to a call to fetchPokemon('pikachu')
-
-// 🐨 when the promise resolves, assign the "pokemon" variable to the resolved value
-// 💰 For example: somePromise.then(resolvedValue => (someValue = resolvedValue))
+let pokemon
+const pokemonPromise = fetchPokemon('pikachu').then(
+  resolvedValue => (pokemon = resolvedValue),
+)
 
 function PokemonInfo() {
-  // 🐨 if there's no pokemon yet, then throw the pokemonPromise
-  // 💰 (no, for real. Like: `throw pokemonPromise`)
+  if (!pokemon) throw pokemonPromise
 
-  // if the code gets it this far, then the pokemon variable is defined and
-  // rendering can continue!
   return (
     <div>
       <div className="pokemon-info__img-wrapper">
@@ -46,11 +33,14 @@ function App() {
   return (
     <div className="pokemon-info-app">
       <div className="pokemon-info">
-        {/* 🐨 Wrap the PokemonInfo component with a React.Suspense component with a fallback */}
-        <PokemonInfo />
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <PokemonInfo />
+        </React.Suspense>
       </div>
     </div>
   )
 }
 
 export default App
+
+
