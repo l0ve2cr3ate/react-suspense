@@ -11,6 +11,21 @@ import {
 } from '../pokemon'
 import {createResource} from '../utils'
 
+// In this exercise, we’ll wrap the existing call to set the resource in a transition 
+// so the input value gets updated when you select a pokemon. We’ll also make the pokemon 
+// information area “appear stale” by making it slightly transparent if isPending is true.
+
+// This is a good one to play around with setting the delay argument to fetchPokemon a bit.
+
+// 📣 BREAKING CHANGE ALERT: The version of React in this project works like it does in the 
+// recorded videos. However in the future experimental builds of React, the SUSPENSE_CONFIG 
+// option to useTransition has been completely removed. Read more about this here: 
+// https://github.com/facebook/react/pull/19703
+
+// Here’s your reminder that you’re learning about experimental software which can change 
+// at any moment without notice 😅
+
+
 function PokemonInfo({pokemonResource}) {
   const pokemon = pokemonResource.read()
   return (
@@ -23,31 +38,17 @@ function PokemonInfo({pokemonResource}) {
   )
 }
 
-// 🐨 create a SUSPENSE_CONFIG variable right here and configure timeoutMs to
-// whatever feels right to you, then try it out and tweek it until you're happy
-// with the experience.
+const SUSPENSE_CONFIG = {timeoutMs: 4000}
+
 
 function createPokemonResource(pokemonName) {
-  // 🦉 once you've finished the exercise, play around with the delay...
-  // the second parameter to fetchPokemon is a delay so you can play around
-  // with different timings
   let delay = 1500
-  // try a few of these fetch times:
-  // shows busy indicator
-  // delay = 450
-
-  // shows busy indicator, then suspense fallback
-  // delay = 5000
-
-  // shows busy indicator for a split second
-  // 💯 this is what the extra credit improves
-  // delay = 200
   return createResource(fetchPokemon(pokemonName, delay))
 }
 
 function App() {
   const [pokemonName, setPokemonName] = React.useState('')
-  // 🐨 add a useTransition hook here
+  const [startTransition, isPending] = React.useTransition(SUSPENSE_CONFIG)
   const [pokemonResource, setPokemonResource] = React.useState(null)
 
   React.useEffect(() => {
@@ -55,10 +56,11 @@ function App() {
       setPokemonResource(null)
       return
     }
-    // 🐨 wrap this next line in a startTransition call
-    setPokemonResource(createPokemonResource(pokemonName))
-    // 🐨 add startTransition to the deps list here
-  }, [pokemonName])
+
+    startTransition(() => {
+      setPokemonResource(createPokemonResource(pokemonName))
+    })
+  }, [pokemonName, startTransition])
 
   function handleSubmit(newPokemonName) {
     setPokemonName(newPokemonName)
@@ -72,11 +74,7 @@ function App() {
     <div className="pokemon-info-app">
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
-      {/*
-        🐨 add inline styles here to set the opacity to 0.6 if the
-        useTransition above is pending
-      */}
-      <div className="pokemon-info">
+      <div className={`pokemon-info ${isPending ? 'pokemon-loading' : ''}`}>
         {pokemonResource ? (
           <PokemonErrorBoundary
             onReset={handleReset}
@@ -97,3 +95,5 @@ function App() {
 }
 
 export default App
+
+

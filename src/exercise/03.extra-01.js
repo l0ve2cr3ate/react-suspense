@@ -1,5 +1,5 @@
-// Cache resources
-// http://localhost:3000/isolated/exercise/04.js
+// useTransition for improved loading states
+// Exercise 1 Extra Credit 1
 
 import * as React from 'react'
 import {
@@ -11,14 +11,19 @@ import {
 } from '../pokemon'
 import {createResource} from '../utils'
 
-// If you select a pokemon, then choose another, and then go back to the pokemon you selected
-// the first time, you’ll notice that you’re loading that first pokemon twice, even though
-// the data hasn’t changed. That data is unlikely to ever change, so we could improve the
-// user experience considerably by caching the data so it’s available for the next time
-// the user wants to look at that pokemon.
+// ## Extra Credit
+// ### 1. 💯 use css transitions
 
-// For the cache object, the key will be the pokemon name, and the cache value will be the
-// resource object.
+// If the user has a really fast connection, then they'll see a "flash of loading
+// content" which isn't a great experience. To combat this, I've written a css rule
+// that has a transition delay for the opacity to not become transparent for 300
+// milliseconds. That way if the user's on a fast connection, they wont see the
+// loading state.
+
+// Instead of using inline styles, dynamically apply the class name
+// `pokemon-loading` if `isPending` is true to take advantage of this. The styles
+// are in `src/styles.css` if you want to take a look.
+
 
 function PokemonInfo({pokemonResource}) {
   const pokemon = pokemonResource.read()
@@ -32,26 +37,12 @@ function PokemonInfo({pokemonResource}) {
   )
 }
 
-const SUSPENSE_CONFIG = {
-  timeoutMs: 4000,
-  busyDelayMs: 300,
-  busyMinDurationMs: 700,
-}
+const SUSPENSE_CONFIG = {timeoutMs: 4000}
 
-const pokemonResourceCache = {}
-
-const getPokemonResource = name => {
-  const lowerCasePokemon = name.toLowerCase()
-  let resource = pokemonResourceCache[lowerCasePokemon]
-  if (!resource) {
-    resource = createPokemonResource(lowerCasePokemon)
-    pokemonResourceCache[lowerCasePokemon] = resource
-  }
-  return resource
-}
 
 function createPokemonResource(pokemonName) {
-  return createResource(fetchPokemon(pokemonName))
+  let delay = 1500
+  return createResource(fetchPokemon(pokemonName, delay))
 }
 
 function App() {
@@ -64,8 +55,9 @@ function App() {
       setPokemonResource(null)
       return
     }
+
     startTransition(() => {
-      setPokemonResource(getPokemonResource(pokemonName))
+      setPokemonResource(createPokemonResource(pokemonName))
     })
   }, [pokemonName, startTransition])
 
@@ -102,6 +94,5 @@ function App() {
 }
 
 export default App
-
 
 
