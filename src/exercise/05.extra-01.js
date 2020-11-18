@@ -1,5 +1,5 @@
 // Suspense Image
-// http://localhost:3000/isolated/exercise/05.js
+// Exercise 5 Extra Credit 1
 
 import * as React from 'react'
 import {
@@ -8,33 +8,9 @@ import {
   PokemonForm,
   PokemonDataView,
   PokemonErrorBoundary,
+  getImageUrlForPokemon,
 } from '../pokemon'
 import {createResource, preloadImage} from '../utils'
-
-
-
-// If you turn up the throttle on your network tab (to “Slow 3G” for example) and select 
-// pokemon, you may notice that images take a moment to load in.
-
-// For the first one, there’s nothing there and then it bumps the content down when it loads. 
-// This can be “fixed” by setting a fixed height for the images. But let’s assume that you 
-// can’t be sure what that height is.
-
-// If you select another pokemon, then that pokemon’s data pops in, but the old pokemon’s 
-// image remains in place until the new one’s image finishes loading.
-
-// With suspense, we have an opportunity to make this experience a lot better. We have two 
-// related options:
-
-// Make an Img component that suspends until the browser has actually loaded the image.
-// Make a request for the image alongside the pokemon data.
-// Option 1 means that nothing will render until both the data and the image are ready.
-
-// Option 2 is even better because it loads the data and image at the same time. It works 
-// because all the images are available via the same information we use to get the pokemon 
-// data.
-
-// We’re going to do both of these approaches for this exercise (option 2 is extra credit).
 
 // ❗❗❗❗
 // 🦉 On this one, make sure that you UNCHECK the "Disable cache" checkbox
@@ -42,30 +18,46 @@ import {createResource, preloadImage} from '../utils'
 // approach to work!
 // ❗❗❗❗
 
+// Extra Credit
+// 1. 💯 avoid waterfall
 
-const cache = {}
+// If you open up the network tab, you’ll notice that you have to load the data before 
+// you can load the image because the data is where we get the image URL. You may also 
+// notice that the image URL is always very predictable. In fact, I even wrote a function 
+// for you to get the image URL based on the pokemon name! It’s exported by src/pokemon.js 
+// and is called getImageUrlForPokemon.
 
-const Img = ({src, alt, ...props}) => {
-  let resource = cache[src]
-  if(!resource) {
-    resource = createResource(preloadImage(src))
-    cache[src] = resource
-  }
-  return <img src={resource.read()} alt={alt} {...props} />
-}
+// const imageUrl = getImageUrlForPokemon('pikachu')
+// Try to pre-load this at the same time as the rest of your data. This one will be a bit 
+// trickier. I’ll give you a hint. There are several ways you could do this, but in my 
+// solution, I end up changing the PokemonInfo component to this:
+
+// function PokemonInfo({pokemonResource}) {
+//   const pokemon = pokemonResource.data.read()
+//   return (
+//     <div>
+//       <div className="pokemon-info__img-wrapper">
+//         <img src={pokemonResource.image.read()} alt={pokemon.name} />
+//       </div>
+//       <PokemonDataView pokemon={pokemon} />
+//     </div>
+//   )
+// }
+
 
 
 function PokemonInfo({pokemonResource}) {
-  const pokemon = pokemonResource.read()
-  return (
-    <div>
-      <div className="pokemon-info__img-wrapper">
-        <Img src={pokemon.image} alt={pokemon.name} />
+    const pokemon = pokemonResource.data.read()
+    return (
+      <div>
+        <div className="pokemon-info__img-wrapper">
+          <img src={pokemonResource.image.read()} alt={pokemon.name} />
+        </div>
+        <PokemonDataView pokemon={pokemon} />
       </div>
-      <PokemonDataView pokemon={pokemon} />
-    </div>
-  )
-}
+    )
+  }
+  
 
 const SUSPENSE_CONFIG = {
   timeoutMs: 4000,
@@ -86,8 +78,11 @@ function getPokemonResource(name) {
 }
 
 function createPokemonResource(pokemonName) {
-  return createResource(fetchPokemon(pokemonName))
+  const data = createResource(fetchPokemon(pokemonName))
+  const image = createResource(preloadImage(getImageUrlForPokemon(pokemonName)))
+  return {data, image}
 }
+
 
 function App() {
   const [pokemonName, setPokemonName] = React.useState('')
@@ -137,5 +132,3 @@ function App() {
 }
 
 export default App
-
-
