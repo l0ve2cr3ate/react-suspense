@@ -12,6 +12,14 @@ import {
 } from '../pokemon'
 import {createResource, preloadImage} from '../utils'
 
+// Exercise
+// In this exercise, you’re going to create a usePokemonResource hook with the following API:
+
+// const [pokemonResource, isPending] = usePokemonResource(pokemonName)
+// This way users of your hook don’t need to bother calling startTransition or anything. 
+// Your custom hook will take care of that. Any time the pokemonName changes, your hook will
+// trigger an update to the pokemonResource.
+
 function PokemonInfo({pokemonResource}) {
   const pokemon = pokemonResource.data.read()
   return (
@@ -48,15 +56,10 @@ function createPokemonResource(pokemonName) {
   return {data, image}
 }
 
-function App() {
-  const [pokemonName, setPokemonName] = React.useState('')
-  // 🐨 move these two lines to a custom hook called usePokemonResource
+const usePokemonResource = (pokemonName) => {
   const [startTransition, isPending] = React.useTransition(SUSPENSE_CONFIG)
   const [pokemonResource, setPokemonResource] = React.useState(null)
-  // 🐨 call usePokemonResource with the pokemonName.
-  //    It should return both the pokemonResource and isPending
 
-  // 🐨 move this useEffect call your custom usePokemonResource hook
   React.useEffect(() => {
     if (!pokemonName) {
       setPokemonResource(null)
@@ -66,6 +69,13 @@ function App() {
       setPokemonResource(getPokemonResource(pokemonName))
     })
   }, [pokemonName, startTransition])
+
+  return [pokemonResource, isPending]
+}
+
+function App() {
+  const [pokemonName, setPokemonName] = React.useState('')
+  const [pokemonResource, isPending] = usePokemonResource(pokemonName)
 
   function handleSubmit(newPokemonName) {
     setPokemonName(newPokemonName)
@@ -100,3 +110,4 @@ function App() {
 }
 
 export default App
+

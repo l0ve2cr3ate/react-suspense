@@ -8,6 +8,15 @@ import Spinner from '../suspense-list/spinner'
 import {createResource} from '../utils'
 import {fetchUser, PokemonForm, PokemonErrorBoundary} from '../pokemon'
 
+// Exercise
+// In this exercise, we’ve built Pokemon Banking app and because the app is getting so large 
+// and there’s so many dynamic parts, we’ve decided to code split a lot of it, this makes 
+// our app load faster, but it makes the loading experience sub-optimal.
+
+// Let’s play around with <React.SuspenseList /> to coordinate the loading states.
+
+// 💰 tip, you can nest Suspense lists! Give that a try.
+
 // 💰 this delay function just allows us to make a promise take longer to resolve
 // so we can easily play around with the loading time of our code.
 const delay = time => promiseResult =>
@@ -71,10 +80,12 @@ function App() {
           onReset={handleReset}
           resetKeys={[pokemonResource]}
         >
+          <React.SuspenseList revealOrder="forwards" tail="collapsed">
           <React.Suspense fallback={fallback}>
             <NavBar pokemonResource={pokemonResource} />
           </React.Suspense>
           <div className={cn.mainContentArea}>
+            <React.SuspenseList revealOrder="together">
             <React.Suspense fallback={fallback}>
               <LeftNav />
             </React.Suspense>
@@ -84,7 +95,9 @@ function App() {
             <React.Suspense fallback={fallback}>
               <RightNav pokemonResource={pokemonResource} />
             </React.Suspense>
+            </React.SuspenseList>
           </div>
+          </React.SuspenseList>
         </PokemonErrorBoundary>
       </div>
     </div>
